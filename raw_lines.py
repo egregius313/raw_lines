@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 """
 Usage:
-  raw_lines.py [options] <file>
+  raw_lines.py [options] <file>...
 
 Options:
-   --count              Counts the number of raw lines.
-   --out=<out-file>     Writes output to FILE.
-   --library            Removes all entry point code.
+   -c, --count                       Counts the number of raw lines.
+   -o=<out-file>, --out=<out-file>   Writes output to FILE.
+   -l, --library                     Removes all entry point code.
 """
 
 import re
@@ -18,13 +18,13 @@ import docopt
 BLOCK_STRING_DELIMITERS = re.compile('["\']{3}')
 
 STATEMENTS = [
-    "class",
-    "def",
-    "elif",
-    "else",
-    "for",
-    "if",
-    "while",
+    'class',
+    'def',
+    'elif',
+    'else',
+    'for',
+    'if',
+    'while',
 ]
 
 _STATEMENT_PATTERN = re.compile(
@@ -110,21 +110,26 @@ if __name__ == '__main__':
     # Whether there is a file to be used, otherwise stdin becomes the file.
     using_file = bool(arguments.get('<file>'))
 
-    in_stream = open(arguments['<file>'], 'r') if using_file else sys.stdin
+    if using_file:
+        in_streams = [(file, open(file, 'r')) for file in arguments['<file>']]
+    else:
+        in_streams = [('-', sys.stdin)]
+
     out_stream = open(arguments['--out'], 'w') if arguments.get('--out') else sys.stdout
 
-    lines = raw_lines(in_stream)
-
-    if arguments.get('--library'):
-        lines = library(lines)
-
     with out_stream:
-        if arguments.get('--count'):
-            out_stream.write('{count:d} {file}'.format(
-                count=count_lines(lines),
-                file=arguments.get('<file>', ''),
-                ).strip() + '\n'
-            )
-        else:
-            for line in lines:
-                out_stream.write(line)
+        for file, in_stream in in_streams:
+            lines = raw_lines(in_stream)
+
+            if arguments.get('--library'):
+                lines = library(lines)
+
+            if arguments.get('--count'):
+                out_stream.write('{count:d} {file}'.format(
+                    count=count_lines(lines),
+                    file=file,
+                    ).strip() + '\n'
+                )
+            else:
+                for line in lines:
+                    out_stream.write(line)
