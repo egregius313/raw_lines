@@ -133,7 +133,8 @@ if __name__ == '__main__':
 
     with out_stream:
         for file, in_stream in in_streams:
-            lines = raw_lines(in_stream)
+            with in_stream:
+                lines = raw_lines(in_stream)
 
             if arguments.get('--library'):
                 lines = library(lines)
