@@ -12,6 +12,7 @@ Options:
    -c, --count                       Counts the number of raw lines.
    -o=<out-file>, --out=<out-file>   Writes output to <out-file>.
    -l, --library                     Removes all entry point code.
+   -n                                Number the lines (like cat -n).
    -h, --help                        Show help/usage page.
    --version                         Show the version number and exit.
 """
@@ -136,17 +137,21 @@ if __name__ == '__main__':
             with in_stream:
                 lines = raw_lines(in_stream)
 
-            if arguments.get('--library'):
-                lines = library(lines)
+                if arguments.get('--library'):
+                    lines = library(lines)
 
-            if arguments.get('--count'):
-                out_stream.write('{count:d} {file}'.format(
-                    count=count_lines(lines),
-                    file=file,
-                    ).strip() + '\n'
-                )
-            else:
-                for line in lines:
-                    out_stream.write(line)
+                if arguments.get('-n'):
+                    lines = map(lambda t: '{n:6d}\t{line}'.format(n=t[0], line=t[1]),
+                                enumerate(lines, 1))
+
+                if arguments.get('--count'):
+                    out_stream.write('{count:d} {file}'.format(
+                        count=count_lines(lines),
+                        file=file,
+                        ).strip() + '\n'
+                    )
+                else:
+                    for line in lines:
+                        out_stream.write(line)
 
     sys.exit(exit_code)
