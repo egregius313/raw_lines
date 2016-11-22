@@ -1,12 +1,19 @@
 #!/usr/bin/env python
 """
+raw_lines.py
+
+A basic utility to figure out how many executable lines of code
+there are in a Python file.
+
 Usage:
   raw_lines.py [options] <file>...
 
 Options:
    -c, --count                       Counts the number of raw lines.
-   -o=<out-file>, --out=<out-file>   Writes output to FILE.
+   -o=<out-file>, --out=<out-file>   Writes output to <out-file>.
    -l, --library                     Removes all entry point code.
+   -h, --help                        Show help/usage page.
+   --version                         Show the version number and exit.
 """
 
 import re
@@ -105,13 +112,20 @@ def count_lines(f_stream: Iterator[str]) -> Iterator[str]:
 if __name__ == '__main__':
     import sys
 
+    exit_code = 0
     arguments = docopt.docopt(__doc__, version='0.1')
 
     # Whether there is a file to be used, otherwise stdin becomes the file.
     using_file = bool(arguments.get('<file>'))
 
     if using_file:
-        in_streams = [(file, open(file, 'r')) for file in arguments['<file>']]
+        in_streams = []
+        for file in arguments['<file>']:
+            try:
+                in_streams.append((file, open(file, 'r')))
+            except FileNotFoundError:
+                sys.stderr.write('raw_lines.py: %s: No such file or directory\n' % file)
+                exit_code = 1
     else:
         in_streams = [('-', sys.stdin)]
 
@@ -133,3 +147,5 @@ if __name__ == '__main__':
             else:
                 for line in lines:
                     out_stream.write(line)
+
+    sys.exit(exit_code)
